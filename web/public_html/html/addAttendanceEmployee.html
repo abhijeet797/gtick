@@ -1,0 +1,232 @@
+<script type="text/javascript" src="./../js/addAttendanceEmployee.js"></script>
+<style type="text/css" >
+  .DivCen{
+    text-align: center;
+    padding: 5px 10px;
+  }
+  .infoTable{
+    margin: 5px;
+    padding: 10px;
+  }
+  .attendanceTable thead {
+    border-left: 1px solid #ccc !important;
+    background: #117191;
+  }
+  .attendanceTable tbody {
+    border-left: 1px solid #ccc !important;
+  }
+  .attendanceTable thead th{
+    text-align: center;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+  }
+  .attendanceTable tbody td{
+    text-align: center;
+  }
+  .attendanceTable tbody tr:hover{
+    background-color: #ccc;
+  }
+</style>
+<div class="row no-margin no-padding">
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 col-xl-3 DivCen">
+    <label>Date of Attendance<i class="red"> *</i></label>
+    <input class="form-control form-controlMy" id="date" name="date" placeholder="DD-MM-YYYY" type="text" />
+  </div>
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 col-xl-3 DivCen">
+    <label>GreenTicks attendance Sheet<i class="red"> *</i></label>
+    <input name="file" type="file" id="comLogo" accept=".xlsx, .xls" />
+  </div>
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 col-xl-3 registration DivCen" id="myFunctionSubmitDiv"></div>
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 col-xl-3 registration DivCen" id="myFunctionSubmitDiv">
+    <button class="btn btn-primary" type="submit" value="Submit" onclick="uploadAttandance()">Fill Details & Submit</button>
+  </div>
+</div>
+
+<div id='my_file_output_Div' class='hide'>
+<div class="infoTable"></div>  
+<table style="width:100%" class="table-striped table-bordered attendanceTable">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Check-In</th>
+      <th>Check-Out</th>
+      <th>Total-Duration</th>
+    </tr>
+  </thead>
+  <tbody  id="my_file_output"></tbody>
+</table>
+</div>
+<script>
+          var oFileIn;
+      oFileIn = document.getElementById('comLogo');
+    if(oFileIn.addEventListener) {
+        oFileIn.addEventListener('change', filePicked, false);
+    };
+      function filePicked(oEvent) {
+      // clear the table
+      $("#my_file_output").html("");
+// Get The File From The Input
+var oFile = oEvent.target.files[0];
+var sFilename = oFile.name;
+// Create A File Reader HTML5
+var reader = new FileReader();
+
+// Ready The Event For When A File Gets Selected
+reader.onload = function(e) {
+    var data = e.target.result;
+    var cfb = XLSX.read(data, {type: 'binary'});
+    console.log("cfb>>>>",cfb);
+            cfb.SheetNames.forEach(function(sheetName) {
+        // Obtain The Current Row As CSV
+        var sCSV = XLS.utils.make_csv(cfb.Sheets[sheetName]);   
+        var oJS = XLS.utils.sheet_to_json(cfb.Sheets[sheetName]);   
+        console.log(oJS.length);
+        if(oJS.length == 0){
+          console.log("Data Not Found!!!!!");
+        }else{
+          if(oJS[0].Name === "Samuel Arick"){
+       $.each(oJS, function(i, arr) {
+        var body = "<tr>";
+        body += "<td>" + arr.Name + "</td>";
+        if(arr.Status === "Present"){
+        body += "<td style='color: green;'>" + arr.Status + "</td>";
+        body += "<td style='color: green;'>" + arr.CheckIn + "</td>";
+        body += "<td style='color: green;'>" + arr.CheckOut + "</td>";
+        body += "<td style='color: green;'>" + arr.TotalDuration + "</td>";
+        }else if(arr.Status === "Leave"){
+        body += "<td style='color: orange;'>" + arr.Status + "</td>";
+        body += "<td style='color: orange;'>" + arr.CheckIn + "</td>";
+        body += "<td style='color: orange;'>" + arr.CheckOut + "</td>";
+        body += "<td style='color: orange;'>" + arr.TotalDuration + "</td>";
+        }else{
+        body += "<td style='color: red;'>" + arr.Status + "</td>";
+        body += "<td style='color: red;'>" + arr.CheckIn + "</td>";
+        body += "<td style='color: red;'>" + arr.CheckOut + "</td>";
+        body += "<td style='color: red;'>" + arr.TotalDuration + "</td>";
+        }
+        body += "</tr>";
+        console.log("body>>>",body);
+         $("#my_file_output").append(body);
+      });
+      $('#my_file_output_Div').removeClass('hide');
+          }
+          else{
+swal("this Exal-sheet is not in desire format, Please Upload New Excel file");
+
+          }
+        }
+
+    });
+};
+
+// Tell JS To Start Reading The File.. You could delay this if desired
+reader.readAsBinaryString(oFile);
+};
+
+
+// working code for send excell-sheet
+  function checkfile(sender) {
+    console.log("sender", sender);
+    var validExts = new Array(".xlsx", ".xls");
+    // var fileExt = sender.value;
+    var fileExt = sender;
+    fileExt = fileExt.substring(fileExt.lastIndexOf('.'));
+    if (validExts.indexOf(fileExt) < 0) {
+      // alert("Invalid file selected, valid files are of " +
+      //          validExts.toString() + " types.");
+      swal({
+        title: "Cancelled",
+        text: "Invalid file selected, valid files are of " + validExts.toString() + " types.",
+        type: "error"
+      });
+      return false;
+    } else return true;
+  };
+
+  function uploadAttandance() {
+    var file = document.getElementById('comLogo').files[0];
+    console.log(file);
+    if (file != undefined) {
+      var check = checkfile(file.name);
+      var date = $('#date').val();
+      if (date) {
+
+        console.log(date);
+        var fd = new FormData();
+        fd.append('Attendance', $('#comLogo')[0].files[0]);
+
+
+            // var data = null;
+            // var file = $('#comLogo')[0].files[0];
+            // var reader = new FileReader();
+            // var file1 = reader.readAsText(file);
+            // console.log("file1>>>>>>>>>>>",file1);
+            // reader.onload = function(event) {
+            //     var csvData = event.target.result;
+            //     data = $.xlsx.toArrays(csvData);
+            //     if (data && data.length > 0) {
+            //       alert('Imported -' + data.length + '- rows successfully!');
+            //     } else {
+            //         alert('No data to import!');
+            //     }
+            // };
+            // reader.onerror = function() {
+            //     alert('Unable to read ' + file.fileName);
+            // };
+
+        console.log("fd>>>>>>>", fd);
+        if (check) {
+          $.ajax({
+            url: '/route/addAttendance',
+            // url: '/upload',
+            data: fd,
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            beforeSend: function(xhr) {
+              xhr.setRequestHeader('X-access-Token', date);
+            },
+
+            success: function(data) {
+              console.log(data);
+              if(data.resCode === "Error"){
+                swal({
+                  title: "Cancelled",
+                  text: data.msg,
+                  type: "error"
+                });
+              }
+              else{
+              swal({
+                  title: "OK!",
+                  text: "Update Successfully",
+                  type: "success"
+                },
+                function() {
+                  swal.close();
+                  window.location.href = './login.html';
+                });
+              }
+            }
+          });
+        } else {
+          console.log("check======false");
+        }
+      } else {
+        swal({
+          title: "Cancelled",
+          text: "Please enter The Attendance Date!",
+          type: "error"
+        });
+      }
+    } else {
+      swal({
+        title: "Cancelled",
+        text: "Please select Attendance Sheet!",
+        type: "error"
+      });
+    }
+  };
+</script>
